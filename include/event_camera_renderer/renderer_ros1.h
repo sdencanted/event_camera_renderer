@@ -17,7 +17,7 @@
 #define EVENT_CAMERA_RENDERER__RENDERER_ROS1_H_
 
 #include <event_camera_codecs/decoder.h>
-#include <event_camera_codecs/decoder_factory.h>
+#include <event_camera_codecs/decoder_f actory.h>
 #include <event_camera_msgs/EventPacket.h>
 #include <image_transport/image_transport.h>
 #include <ros/ros.h>
@@ -33,13 +33,13 @@ namespace event_camera_renderer
 class Renderer
 {
 public:
-  using EventPacket = event_camera_msgs::EventPacket;
+  using MagEventPacket = event_camera_msgs::MagEventPacket;
   explicit Renderer(ros::NodeHandle & nh);
   ~Renderer();
 
 private:
   void frameTimerExpired(const ros::TimerEvent &);
-  void eventMsg(const EventPacket::ConstPtr & msg);
+  void eventMsg(const MagEventPacket::ConstPtr & msg);
   void imageConnectCallback(const image_transport::SingleSubscriberPublisher &);
   void startNewImage();
 

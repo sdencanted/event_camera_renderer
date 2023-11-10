@@ -18,14 +18,14 @@
 
 #include <memory>
 #ifdef USING_ROS_1
-#include <event_camera_msgs/EventPacket.h>
+#include <event_camera_msgs/MagEventPacket.h>
 #include <sensor_msgs/Image.h>
-using EventPacket = event_camera_msgs::EventPacket;
+using MagEventPacket = event_camera_msgs::MagEventPacket;
 typedef std::unique_ptr<sensor_msgs::Image> ImgPtr;
 #else
-#include <event_camera_msgs/msg/event_packet.hpp>
+#include <event_camera_msgs/msg/mag_event_packet.hpp>
 #include <sensor_msgs/msg/image.hpp>
-using EventPacket = event_camera_msgs::msg::EventPacket;
+using MagEventPacket = event_camera_msgs::msg::MagEventPacket;
 using ImgPtr = sensor_msgs::msg::Image::UniquePtr;
 #endif
 
@@ -37,6 +37,7 @@ public:
   virtual ~Display() {}
   virtual void initialize(const std::string & encoding, uint32_t width, uint32_t height) = 0;
   virtual void update(const uint8_t * events, size_t numEvents) = 0;
+  virtual void mag_update(const uint8_t * events, size_t numEvents, float theta) = 0;
   virtual bool hasImage() const = 0;
   virtual void resetImagePtr() = 0;
   virtual ImgPtr getImage() = 0;

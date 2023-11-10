@@ -38,8 +38,8 @@ public:
 
 private:
   SharpUpdater imageUpdater_;
-  event_camera_codecs::Decoder<EventPacket, SharpUpdater> * decoder_;
-  event_camera_codecs::DecoderFactory<EventPacket, SharpUpdater> decoderFactory_;
+  event_camera_codecs::Decoder<MagEventPacket, SharpUpdater> * decoder_;
+  event_camera_codecs::DecoderFactory<MagEventPacket, SharpUpdater> decoderFactory_;
 };
 }  // namespace event_camera_renderer
 #endif  // EVENT_CAMERA_RENDERER__SHARP_DISPLAY_H_

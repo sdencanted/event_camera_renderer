@@ -13,33 +13,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EVENT_CAMERA_RENDERER__TIME_SLICE_DISPLAY_H_
-#define EVENT_CAMERA_RENDERER__TIME_SLICE_DISPLAY_H_
+#ifndef EVENT_CAMERA_RENDERER__SHARP_DISPLAY_H_
+#define EVENT_CAMERA_RENDERER__SHARP_DISPLAY_H_
 
 #include <event_camera_codecs/decoder_factory.h>
 
 #include "event_camera_renderer/display.h"
-#include "event_camera_renderer/simple_updater.h"
+#include "event_camera_renderer/mag_updater.h"
 
 namespace event_camera_renderer
 {
-class TimeSliceDisplay : public Display
+class MagDisplay : public Display
 {
 public:
   // -------- inherited methods
   void initialize(const std::string & encoding, uint32_t width, uint32_t height) override;
   void update(const uint8_t * events, size_t numEvents) override;
+  void mag_update(const uint8_t * events, size_t numEvents, float theta) override;
   bool hasImage() const override { return (imageUpdater_.hasImage()); }
   void resetImagePtr() override { imageUpdater_.resetImagePtr(); }
   ImgPtr getImage() override { return (imageUpdater_.getImage()); }
   void setImage(ImgPtr * img) override { imageUpdater_.setImage(img); }
   // -------- end of inherited methods
-  TimeSliceDisplay() {}
+  MagDisplay() {}
 
 private:
-  SimpleUpdater imageUpdater_;
-  event_camera_codecs::Decoder<MagEventPacket, SimpleUpdater> * decoder_;
-  event_camera_codecs::DecoderFactory<MagEventPacket, SimpleUpdater> decoderFactory_;
+  MagUpdater imageUpdater_;
+  event_camera_codecs::Decoder<MagEventPacket, MagUpdater> * magDecoder_;
+  event_camera_codecs::DecoderFactory<MagEventPacket, MagUpdater> magDecoderFactory_;
 };
 }  // namespace event_camera_renderer
-#endif  // EVENT_CAMERA_RENDERER__TIME_SLICE_DISPLAY_H_
+#endif  // EVENT_CAMERA_RENDERER__SHARP_DISPLAY_H_

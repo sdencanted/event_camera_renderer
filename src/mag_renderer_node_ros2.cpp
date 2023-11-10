@@ -13,24 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "event_camera_renderer/display.h"
+#include <memory>
+#include <rclcpp/rclcpp.hpp>
 
-#include "event_camera_renderer/mag_display.h"
-#include "event_camera_renderer/sharp_display.h"
-#include "event_camera_renderer/time_slice_display.h"
+#include "event_camera_renderer/mag_renderer_ros2.h"
 
-namespace event_camera_renderer
+int main(int argc, char ** argv)
 {
-std::shared_ptr<Display> Display::newInstance(const std::string & type)
-{
-  if (type == "time_slice") {
-    return (std::make_shared<TimeSliceDisplay>());
-
-  } else if (type == "sharp") {
-    return (std::make_shared<SharpDisplay>());
-  } else if (type == "mag") {
-    return (std::make_shared<MagDisplay>());
-  }
-  return (0);
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<event_camera_renderer::Renderer>(rclcpp::NodeOptions());
+  RCLCPP_INFO(node->get_logger(), "renderer_node started up!");
+  // actually run the node
+  rclcpp::spin(node);  // should not return
+  rclcpp::shutdown();
+  return 0;
 }
-}  // namespace event_camera_renderer

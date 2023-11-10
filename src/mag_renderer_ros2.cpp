@@ -13,13 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "event_camera_renderer/renderer_ros2.h"
-
 #include <event_camera_msgs/msg/event_packet.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <vector>
 
 #include "event_camera_renderer/check_endian.h"
+#include "event_camera_renderer/renderer_ros2.h"
 
 namespace event_camera_renderer
 {
@@ -28,24 +27,31 @@ Renderer::Renderer(const rclcpp::NodeOptions & options)
     "event_camera_renderer",
     rclcpp::NodeOptions(options).automatically_declare_parameters_from_overrides(true))
 {
-  std::string displayType;
-  this->get_parameter_or("display_type", displayType, std::string("time_slice"));
+  std::string displayType = "mag";
+  // this->get_parameter_or("display_type", displayType, std::string("time_slice"));
   display_ = Display::newInstance(displayType);
   if (!display_) {
     RCLCPP_ERROR_STREAM(this->get_logger(), "invalid display type: " << displayType);
     throw std::runtime_error("invalid display type!");
   }
-  double fps;
-  this->get_parameter_or("fps", fps, 25.0);
-  sliceTime_ = 1.0 / fps;
+  // double fps;
+  // this->get_parameter_or("fps", fps, 25.0);
+  // sliceTime_ = 1.0 / fps;
   imageMsgTemplate_.height = 0;
   const rmw_qos_profile_t qosProf = rmw_qos_profile_default;
   imagePub_ = image_transport::create_publisher(this, "~/image_raw", qosProf);
   // Since the ROS2 image transport does not call back when subscribers come and go
   // must check by polling
-  subscriptionCheckTimer_ = rclcpp::create_timer(
-    this, get_clock(), rclcpp::Duration(1, 0),
-    std::bind(&Renderer::subscriptionCheckTimerExpired, this));
+  // subscriptionCheckTimer_ = rclcpp::create_timer(
+  //   this, get_clock(), rclcpp::Duration(1, 0),
+  //   std::bind(&Renderer::subscriptionCheckTimerExpired, this));
+  // just subscribe and publish!
+  startNewImage();
+  RCLCPP_INFO(this->get_logger(), "subscribing to events!");
+  const int qsize = 1000;
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(qsize)).best_effort().durability_volatile();
+  eventSub_ = this->create_subscription<event_camera_msgs::msg::MagEventPacket>(
+    "~/events", qos, std::bind(&Renderer::eventMsg, this, std::placeholders::_1));
 }
 
 Renderer::~Renderer()
@@ -58,6 +64,7 @@ Renderer::~Renderer()
   }
 }
 
+// removed need for this
 void Renderer::subscriptionCheckTimerExpired()
 {
   // this silly dance is only necessary because ROS2 at this time does not support
@@ -75,6 +82,8 @@ void Renderer::subscriptionCheckTimerExpired()
       eventSub_ = this->create_subscription<event_camera_msgs::msg::MagEventPacket>(
         "~/events", qos, std::bind(&Renderer::eventMsg, this, std::placeholders::_1));
     }
+
+    //  remove this and publish 1 frame for every packet in
     if (!frameTimer_) {
       // start publishing frames if there is interest in either camerainfo or image
       frameTimer_ = rclcpp::create_timer(
@@ -113,7 +122,16 @@ void Renderer::eventMsg(MagEventPacket::ConstSharedPtr msg)
     }
     display_->initialize(msg->encoding, msg->width, msg->height);
   }
-  display_->update(&(msg->events[0]), msg->events.size());
+  display_->mag_update(
+    &(msg->events[0]), msg->events.size(), msg->events.first_theta, msg->events.last_theta);
+    
+  sensor_msgs::msg::Image::UniquePtr updated_img = display_->getImage();
+  updated_img->header.stamp = t;
+  // give memory management to imagePub_
+  imagePub_.publish(std::move(updated_img));
+  // start a new image
+  startNewImage();
+
 }
 
 void Renderer::frameTimerExpired()

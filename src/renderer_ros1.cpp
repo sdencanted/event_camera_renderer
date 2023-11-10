@@ -77,7 +77,7 @@ void Renderer::startNewImage()
   display_->setImage(&img);                      // event publisher will also render image now
 }
 
-void Renderer::eventMsg(const EventPacket::ConstPtr & msg)
+void Renderer::eventMsg(const MagEventPacket::ConstPtr & msg)
 {
   if (imageMsgTemplate_.height == 0) {
     imageMsgTemplate_.header = msg->header;

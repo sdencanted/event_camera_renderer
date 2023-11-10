@@ -13,24 +13,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "event_camera_renderer/display.h"
-
 #include "event_camera_renderer/mag_display.h"
-#include "event_camera_renderer/sharp_display.h"
-#include "event_camera_renderer/time_slice_display.h"
 
 namespace event_camera_renderer
 {
-std::shared_ptr<Display> Display::newInstance(const std::string & type)
+void MagDisplay::initialize(const std::string & encoding, uint32_t width, uint32_t height)
 {
-  if (type == "time_slice") {
-    return (std::make_shared<TimeSliceDisplay>());
-
-  } else if (type == "sharp") {
-    return (std::make_shared<SharpDisplay>());
-  } else if (type == "mag") {
-    return (std::make_shared<MagDisplay>());
+  decoder_ = magDecoderFactory_.getInstance(encoding, width, height);
+  if (!decoder_) {
+    std::cout << "invalid encoding: " << encoding << std::endl;
+    throw std::runtime_error("invalid encoding!");
   }
-  return (0);
+}
+
+void MagDisplay::mag_update(const uint8_t * events, size_t numEvents, float firstTheta, float lastTheta)
+{
+  // decode will produce callbacks to imageUpdater_
+  magDecoder_->magDecode(events, numEvents, firstTheta, lastTheta, &imageUpdater_);
 }
 }  // namespace event_camera_renderer
